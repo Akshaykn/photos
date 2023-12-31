@@ -1,0 +1,40 @@
+.gridlayoutInner {
+  background-color: white;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  row-gap: 2.4rem;
+  column-gap: 2rem;
+  padding: 1rem;
+  scroll-behavior: smooth;
+  scroll-snap-type: proximity;
+  height: 100vh;
+}
+
+.gridlayout {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+}
+
+.loading {
+   display: flex;
+   position: fixed;
+   bottom: 1rem;
+   background-color:#333;
+   height: fit-content;
+   color: #fff;
+   font-size: 1rem;
+   font-weight: 700;
+   padding: 0.5rem 1rem;
+   left: calc(50% - 5rem);
+   border-radius: 6px;
+   width: 5rem;
+}
+
+.lazyLoadingElement {
+  height: 1rem;
+  grid-column-start: 1;
+  grid-column-end: 4;
+}

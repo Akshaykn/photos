@@ -1,0 +1,26 @@
+# Reference compose file version 3
+version: “3”
+services:
+  mongo:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+
+  react-app:
+    # build from Dockerfile
+    build:
+      context: ./frontend
+    ports:
+      - 3000:3000
+
+  server-app:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    command: gunicorn -c /opt/api/gunicorn_config.py api:app
+    ports:
+      - 80:80
+    environment:
+      MONGODB_URL: mongodb://root:example@mongo:27017/  

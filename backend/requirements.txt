@@ -1,0 +1,13 @@
+pymongo==4.6.1
+flask
+requests
+flask_negotiate
+flask_cors
+gunicorn
+python-dateutil
+cryptography
+requests-toolbelt
+flask-compress
+mongoengine
+Werkzeug==3.0.1
+Pillow==10.1.0
