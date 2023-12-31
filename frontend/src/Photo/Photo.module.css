@@ -124,27 +124,71 @@ img[class*=" expandImage-"] {
 }
 
 .expandedMenu {
-    display: flex;
-    flex-direction: column;
-    background-color: #333;
-    position: absolute;
-    z-index: 1004;
-    height: 10rem;
-    padding: 0.5rem 1rem;
-    justify-content: space-between;
-    border-radius: 0.3rem;
-    top: calc(50% - 5rem);
-    right: 1rem;
-    transition: 0.5s;
-    box-shadow: 1px 1px 4px 1px #333333;
-    animation: slidein 1s forwards;
+  display: flex;
+  flex-direction: column;
+  background-color: #333;
+  position: absolute;
+  z-index: 1004;
+  height: 10rem;
+  padding: 0.5rem 1rem;
+  justify-content: space-between;
+  border-radius: 0.3rem;
+  top: calc(50% - 5rem);
+  right: 1rem;
+  transition: 0.5s;
+  box-shadow: 1px 1px 4px 1px #333333;
+  animation: slidein 1s forwards;
 }
 
 @keyframes slidein {
   0% {
     transform: translateX(4rem);
   }
+
   100% {
     transform: translateX(0);
+  }
+}
+
+.filters {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background-color: #333;
+  position: absolute;
+  bottom: 0px;
+  height: 6rem;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+  width: calc(100% - 1rem);
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+  justify-content: space-around;
+  animation: filtersAnimations 1s forwards;
+}
+
+.filter img {
+  border-radius: 50%;
+  width: 3rem;
+  height: 3rem;
+  cursor: pointer;
+}
+
+.editSelected {
+  background-color: #1c88ac;
+  border-radius: 50%;
+  padding: 2px;
+}
+
+.editNotSelected {
+  background-color: none;
+}
+
+@keyframes filtersAnimations {
+  0% {
+    bottom: -4rem;
+  }
+  100% {
+    bottom: 0rem;
   }
 }

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 import classes from './Photo.module.css';
 import ExpandImage from './../expand.png';
 import CloseImage from './../close.png';
@@ -7,6 +8,7 @@ import likeImage from './../love.png';
 import downloadImage from './../download.png';
 import likedImage from './../like.png';
 import editImage from './../edit.png';
+import _ from 'lodash';
 
 const Photo = (props) => {
     const ref = useRef(0)
@@ -20,6 +22,8 @@ const Photo = (props) => {
     const [showExpandedMenus, setshowExpandedMenus] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
+    const [selectedFilter, setFilter] = useState('none');
+    const [photosFilters, setPhotosFilters] = useState([]);
 
     const generateImageUrl = useCallback((slide = 0) => {
         if (props.image.small_image_url) {
@@ -75,8 +79,14 @@ const Photo = (props) => {
     }
 
     const onClickEdit = () => {
-        setShowFilters(true); 
+        if (showFilters) {
+            setShowFilters(false);
+        } else {
+            setShowFilters(true);
+        }
     }
+
+    const photosFiltersTemp = useSelector((state) => state.filtersSlice.filters);
 
     const onClickExpand = () => {
         setIsExpanded(true);
@@ -97,6 +107,7 @@ const Photo = (props) => {
 
     const onClickClose = () => {
         setIsExpanded(false);
+        setShowFilters(false);
         if (ref.current) {
             const scaledWidth = ref.current.offsetWidth / 2;
             ref.current.style.width = `${scaledWidth}px`;
@@ -111,12 +122,27 @@ const Photo = (props) => {
         }
     };
 
+    const onClickFilter = (selectedFilter) => {
+        let modifiedFilters = _.cloneDeep(photosFilters);
+        modifiedFilters = modifiedFilters.map((filter) => {
+            if (filter.filterid === selectedFilter.filterid) {
+                filter.selected = true;
+            } else {
+                filter.selected = false;
+            }
+            return filter;
+        });
+        setPhotosFilters(modifiedFilters);
+        setFilter(selectedFilter.filterStyle);
+    };
+
     useLayoutEffect(() => {
         let photo = React.createElement('img',
             {
                 src: imageAsset,
                 id: `${props.id}`,
-                ref: imageRef
+                ref: imageRef,
+                style: { filter: selectedFilter },
             });
         setPhoto(photo);
         if (imageRef.current) {
@@ -130,11 +156,14 @@ const Photo = (props) => {
             }
             imageRef.current.onmouseout = function (event) {
                 if (event?.relatedTarget?.className?.toLowerCase().includes("expand")) return;
+                if (isExpanded && showFilters) {
+                    return;
+                }
                 setshowExpandedMenus(false);
                 setShowMenus(false);
             }
         }
-    }, [imageAsset, props.id])
+    }, [imageAsset, props.id, isExpanded, showFilters, selectedFilter])
 
     useEffect(() => {
         if (isExpanded) {
@@ -165,7 +194,14 @@ const Photo = (props) => {
         }
     }, [isExpanded, props.image.large_image_url]);
 
+    useEffect(() => {
+        const pFilters = _.cloneDeep(photosFiltersTemp);
+        setPhotosFilters(pFilters);
+    }, [photosFiltersTemp]);
+
     const imageClass = `expandImage-${props.id}`;
+
+    const editClass = showFilters ? `${classes.imageCloseWrapper} ${classes.editSelected}` : `${classes.imageCloseWrapper} ${classes.editNotSelected}`
 
     return <div className={classes.photo} ref={ref}>
         {loadingScreen && <div className={classes.photoInner}>
@@ -200,41 +236,29 @@ const Photo = (props) => {
                 <div className={classes.imageCloseWrapper} onMouseOut={hideMenus} onClick={onClickClose}>
                     <img width="20px" height="20px" className={classes.imageCloseClass} src={shareImage} alt="expandclose" />
                 </div>
-                { !isLiked &&
-                <div className={classes.imageCloseWrapper} onMouseOut={hideMenus} onClick={onClickLike}>
-                    <img width="20px" height="20px" className={classes.imageCloseClass} src={likeImage} alt="expandclose" />
-                </div>}
+                {!isLiked &&
+                    <div className={classes.imageCloseWrapper} onMouseOut={hideMenus} onClick={onClickLike}>
+                        <img width="20px" height="20px" className={classes.imageCloseClass} src={likeImage} alt="expandclose" />
+                    </div>}
                 {isLiked && <div className={classes.imageCloseWrapper} onMouseOut={hideMenus} onClick={onClickDisLike}>
-                    <img width="20px" height="20px" style={{'filter': 'none'}} className={classes.imageCloseClass} src={likedImage} alt="expandclose" />
+                    <img width="20px" height="20px" style={{ 'filter': 'none' }} className={classes.imageCloseClass} src={likedImage} alt="expandclose" />
                 </div>}
-                <div className={classes.imageCloseWrapper} onMouseOut={hideMenus} onClick={onClickEdit}>
+                <div className={editClass} onMouseOut={hideMenus} onClick={onClickEdit}>
                     <img width="20px" height="20px" className={classes.imageCloseClass} src={editImage} alt="expandclose" />
                 </div>
                 <div className={classes.imageCloseWrapper} onMouseOut={hideMenus} onClick={onClickClose}>
                     <img width="20px" height="20px" className={classes.imageCloseClass} src={downloadImage} alt="expandclose" />
                 </div>
             </div>}
-            { isExpanded && showFilters &&
-              <div className={classes.filters}>  
-                <div className={classes.filter}>
-                    <img src={imageAsset}/>  
+            {isExpanded && showFilters &&
+                <div className={classes.filters}>
+                    {photosFilters.map((filter, index) => {
+                        return <div className={classes.filter} key={index} onClick={onClickFilter.bind(this, filter)}>
+                            <img src={imageAsset} alt="filter1" style={{ border: `${filter.selected ? '2px solid #fff' : 'none'}`, filter: filter.filterStyle }} />
+                            <div><span style={{ color: '#fff', fontSize: '0.6rem' }}> {filter.filtername} </span></div>
+                        </div>
+                    })}
                 </div>
-                <div className={classes.filter}>
-                    <img src={imageAsset}/>
-                </div>
-                <div className={classes.filter}>
-                    <img src={imageAsset}/>
-                </div> 
-                <div className={classes.filter}>
-                    <img src={imageAsset}/>
-                </div> 
-                <div className={classes.filter}>
-                    <img src={imageAsset}/>
-                </div> 
-                <div className={classes.filter}>
-                    <img src={imageAsset}/>
-                </div> 
-              </div>  
             }
         </div>
     </div>

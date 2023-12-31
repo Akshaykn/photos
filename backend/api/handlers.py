@@ -80,7 +80,7 @@ def get_photos():
 
         photos_response.append({
            "id": index,
-           "settings": ((len(existing_photos) > 0 and existing_photos[index - 1]) if existing_photos[i].get("settings", {}) else {}),
+           "settings": existing_photos[index - 1].get("settings", {}) if (is_fetch_require == False) else {},
            "small_image_url": "/smallphoto/{}".format(index),
            "large_image_url": "/largephoto/{}".format(index)               
         })

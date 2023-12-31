@@ -53,7 +53,7 @@ const Photogrid = (props) => {
         observer.unobserve(gridRef.current);
       }
     };
-  }, [imagesCount, fetchImageUrls])
+  }, [imagesCount, fetchImageUrls, isFetching])
 
   useEffect(() => {
     const numberOfImages = images.length;
