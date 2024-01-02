@@ -36,6 +36,10 @@ class MongoInstance:
         base64_str = image[0].get("large_image")
         base64_image_str = "data:image/jpeg;base64, " + str(base64_str).split('\'')[1]
         return base64_image_str
+    
+    def update_field(self, id, new_value):
+        filter = { "_id": id }
+        self.db["photos"].update_one(filter, new_value)
 
 class ManagePhotos:
 
@@ -53,6 +57,25 @@ class ManagePhotos:
     
     def get_large_photo(self, id):
         return self.mongo_instance.get_large_photo(int(id))
+    
+    def likePhoto(self, id):
+        new_value = { "$set": { "liked" : True } }
+        self.mongo_instance.update_field(id, new_value=new_value)
+        return "Photo is liked"
+
+    def dislikePhoto(self, id):
+        new_value = { "$set": { "liked" : False } }
+        self.mongo_instance.update_field(id, new_value=new_value)
+        return "Photo is disliked"
+
+    def save_filter_configurations(self, id, filter_name, filter_style):
+        filter_config = {
+          "filterName": filter_name,
+          "filter": filter_style   
+        }
+        new_value = { "$set": { "settings" : filter_config }}
+        self.mongo_instance.update_field((id), new_value=new_value)
+        return "Filter settings updated Successfully."    
     
     @staticmethod
     def get_random_photo_id(min, max):

@@ -1,5 +1,5 @@
 from flask import Blueprint, request, send_file, jsonify
-from flask_negotiate import consumes
+from flask_negotiate import consumes, produces
 import requests
 import base64
 import os
@@ -15,6 +15,8 @@ manage_photos = ManagePhotos()
 def apply_caching(response):
     response.headers['Content-Type'] = 'application/json; image;charset=utf-8'
     response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Methods', '*')
+    response.headers.add('Access-Control-Allow-Headers', '*')
     response.headers.add('Cache-Control', 'no-store')
     return response
 
@@ -74,12 +76,14 @@ def get_photos():
             photos.append({
                 "_id": index,
                 "settings": {},
+                "liked": False,
                 "small_image": small_base64_bytes,
                 "large_image": large_base64_bytes  
             })
 
         photos_response.append({
            "id": index,
+           "liked": existing_photos[index - 1].get("liked", False) if (is_fetch_require == False) else False,
            "settings": existing_photos[index - 1].get("settings", {}) if (is_fetch_require == False) else {},
            "small_image_url": "/smallphoto/{}".format(index),
            "large_image_url": "/largephoto/{}".format(index)               
@@ -97,3 +101,27 @@ def get_small_photo(id):
 @main_api_blueprint.route("/largephoto/<id>", methods=["GET"])
 def get_large_photo(id):
     return jsonify({"content": manage_photos.get_large_photo(id)})
+
+@main_api_blueprint.route("/likephoto", methods=["POST"])
+@consumes('application/json')
+def like_photo():
+    data = request.json
+    id = data.get("id", "-1")
+    return jsonify({"content": manage_photos.likePhoto(id), "operationStatus": "OK" })
+
+
+@main_api_blueprint.route("/dislikephoto", methods=["POST"])
+@consumes('application/json')
+def dislike_photo():
+    data = request.json
+    id = data.get("id", "-1")
+    return jsonify({"content": manage_photos.dislikePhoto(id), "operationStatus": "OK" })
+
+@main_api_blueprint.route("/save_filter_configurations", methods=["PATCH"])
+@consumes('application/json')
+def save_filter_configurations():
+    data = request.json
+    id = data.get("id", "-1")
+    filter_name = data.get("filterName", "")
+    filter_style = data.get("filter", "")
+    return jsonify({"content": manage_photos.save_filter_configurations(id, filter_name, filter_style), "operationStatus": "OK" })

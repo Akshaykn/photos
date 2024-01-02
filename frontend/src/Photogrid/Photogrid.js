@@ -50,6 +50,7 @@ const Photogrid = (props) => {
 
     return () => {
       if (gridRef.current) {
+        // eslint-disable-next-line
         observer.unobserve(gridRef.current);
       }
     };
@@ -73,7 +74,7 @@ const Photogrid = (props) => {
   return <>
     <div className={classes.gridlayout}>
       <div className={classes.gridlayoutInner}>
-        {show && images.length > 0 && images.map((image, i) => React.cloneElement(props.children, { image: image, id: (i), key: (new Date().getTime + i) }))}
+        {show && images.length > 0 && images.map((image, i) => React.cloneElement(props.children, { image: image, id: (image.id), key: (new Date().getTime + i) }))}
         {<div ref={gridRef} className={classes.lazyLoadingElement}> </div>}
       </div>
       {isLoading && <div className={classes.loading}> Loading... </div>}

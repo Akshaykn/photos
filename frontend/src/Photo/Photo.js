@@ -23,6 +23,7 @@ const Photo = (props) => {
     const [isLiked, setIsLiked] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
     const [selectedFilter, setFilter] = useState('none');
+    const [selectedFilterName, setFilterName] = useState('default');
     const [photosFilters, setPhotosFilters] = useState([]);
 
     const generateImageUrl = useCallback((slide = 0) => {
@@ -70,16 +71,89 @@ const Photo = (props) => {
         setShowMenus(false);
     };
 
-    const onClickLike = () => {
-        setIsLiked(true);
+    const likephoto = async (id) => {
+        try {
+            const url = "http://127.0.0.1:80/likephoto"
+            const result = await fetch(url, {
+                method: 'POST',
+                body: JSON.stringify({
+                    id: id
+                }),
+                headers: {
+                    'Content-type': 'application/json; charset=UTF-8',
+                }
+            });
+            if (!result.ok) {
+                throw new Error("Something went wrong.");
+            }
+            const response = await result.json();
+            if (response.operationStatus === "OK") {
+                setIsLiked(true);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const dislikephoto = async (id) => {
+        try {
+            const url = "http://127.0.0.1:80/dislikephoto"
+            const result = await fetch(url, {
+                method: 'POST',
+                body: JSON.stringify({
+                    id: id
+                }),
+                headers: {
+                    'Content-type': 'application/json; charset=UTF-8',
+                }
+            });
+            if (!result.ok) {
+                throw new Error("Something went wrong.");
+            }
+            const response = await result.json();
+            if (response.operationStatus === "OK") {
+                setIsLiked(false);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const saveFilterToBackend = async (id) => {
+        try {
+            const url = "http://127.0.0.1:80/save_filter_configurations"
+            const result = await fetch(url, {
+                method: 'PATCH',
+                body: JSON.stringify({
+                    id: id,
+                    filterName: selectedFilterName,
+                    filter: selectedFilter
+                }),
+                headers: {
+                    'Content-type': 'application/json; charset=UTF-8',
+                }
+            });
+            if (!result.ok) {
+                throw new Error("Something went wrong.");
+            }
+            const response = await result.json();
+            if (response.operationStatus === "OK") { }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const onClickLike = (id) => {
+        likephoto(id);
     }
 
-    const onClickDisLike = () => {
-        setIsLiked(false);
+    const onClickDisLike = (id) => {
+        dislikephoto(id);
     }
 
-    const onClickEdit = () => {
+    const onClickEdit = (id) => {
         if (showFilters) {
+            saveFilterToBackend(id);
             setShowFilters(false);
         } else {
             setShowFilters(true);
@@ -134,6 +208,7 @@ const Photo = (props) => {
         });
         setPhotosFilters(modifiedFilters);
         setFilter(selectedFilter.filterStyle);
+        setFilterName(selectedFilter.filterid);
     };
 
     useLayoutEffect(() => {
@@ -165,6 +240,32 @@ const Photo = (props) => {
         }
     }, [imageAsset, props.id, isExpanded, showFilters, selectedFilter])
 
+    useLayoutEffect(() => {
+        setIsLiked(props.image.liked);
+    }, [props.image.liked]);
+
+    useLayoutEffect(() => {
+        const filtername = props?.image?.settings?.filterName || "default";
+        const filter = props?.image?.settings?.filter || "none";
+        let modifiedFilters = _.cloneDeep(photosFiltersTemp);
+       
+        if (modifiedFilters.length > 0 && filtername !== "default") {
+            modifiedFilters = modifiedFilters.map((filter) => {
+                if (filter.filterid === filtername) {
+                    filter.selected = true;
+                } else {
+                    filter.selected = false;
+                }
+                return filter;
+            });
+        }
+        modifiedFilters.length > 0 && setPhotosFilters(modifiedFilters);
+        
+        filtername !== "default" && setFilterName(filtername);
+        filter !== "none" && setFilter(filter); 
+    
+    }, [props.image.settings.filterName, props.image.settings.filter, photosFiltersTemp]);
+
     useEffect(() => {
         if (isExpanded) {
 
@@ -193,11 +294,6 @@ const Photo = (props) => {
             fetchImage();
         }
     }, [isExpanded, props.image.large_image_url]);
-
-    useEffect(() => {
-        const pFilters = _.cloneDeep(photosFiltersTemp);
-        setPhotosFilters(pFilters);
-    }, [photosFiltersTemp]);
 
     const imageClass = `expandImage-${props.id}`;
 
@@ -228,22 +324,28 @@ const Photo = (props) => {
                 </div>
             </div>}
             {isExpanded && <div className={classes.closeMenu}>
-                <div className={classes.imageCloseWrapper} onMouseOut={hideMenus} onClick={onClickClose}>
-                    <img width="20px" height="20px" className={classes.imageCloseClass} src={CloseImage} alt="expandclose" />
+                <div className={classes.imageCloseWrapper}
+                    onMouseOut={hideMenus}
+                    onClick={onClickClose}
+                    style={{ backgroundColor: '#333', borderRadius: "50%", padding: '0.3rem' }}>
+                    <img width="18px" height="18px" className={classes.imageCloseClass} src={CloseImage} alt="expandclose" />
                 </div>
             </div>}
             {isExpanded && showExpandedMenus && <div className={classes.expandedMenu}>
-                <div className={classes.imageCloseWrapper} onMouseOut={hideMenus} onClick={onClickClose}>
+                <div className={classes.imageCloseWrapper}
+                    onMouseOut={hideMenus}
+                    onClick={onClickClose}
+                >
                     <img width="20px" height="20px" className={classes.imageCloseClass} src={shareImage} alt="expandclose" />
                 </div>
                 {!isLiked &&
-                    <div className={classes.imageCloseWrapper} onMouseOut={hideMenus} onClick={onClickLike}>
+                    <div className={classes.imageCloseWrapper} onMouseOut={hideMenus} onClick={onClickLike.bind(this, props.id)}>
                         <img width="20px" height="20px" className={classes.imageCloseClass} src={likeImage} alt="expandclose" />
                     </div>}
-                {isLiked && <div className={classes.imageCloseWrapper} onMouseOut={hideMenus} onClick={onClickDisLike}>
+                {isLiked && <div className={classes.imageCloseWrapper} onMouseOut={hideMenus} onClick={onClickDisLike.bind(this, props.id)}>
                     <img width="20px" height="20px" style={{ 'filter': 'none' }} className={classes.imageCloseClass} src={likedImage} alt="expandclose" />
                 </div>}
-                <div className={editClass} onMouseOut={hideMenus} onClick={onClickEdit}>
+                <div className={editClass} onMouseOut={hideMenus} onClick={onClickEdit.bind(this, props.id)}>
                     <img width="20px" height="20px" className={classes.imageCloseClass} src={editImage} alt="expandclose" />
                 </div>
                 <div className={classes.imageCloseWrapper} onMouseOut={hideMenus} onClick={onClickClose}>
